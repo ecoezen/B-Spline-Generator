@@ -37,11 +37,6 @@ ControlPointsAndKnotVector interpolateWithBSplineCurve(const ControlPoints2D& in
     // Contains shape functions for each amaket parameter positions.
     std::vector<std::vector<double>> shapeFunctions(sizeCommon, std::vector<double>(sizeCommon));
 
-   /* // Resizing vector of rows. 
-    for ( int i = 0 ; i < sizeCommon ; i++ ){    
-        shapeFunctions[i].resize(sizeCommon);
-    }
-    */
     // Calculated control points. To be returned (return.first).
     ControlPoints2D cPoints;
 
@@ -125,8 +120,36 @@ std::vector<double> knotVectorUsingAveraging( const std::vector<double>& paramet
     // Throw exception if polynomial degree is too high for given number of points. Error in case of mInner < 0.
     splinehelper::runtime_error_handler( mInner >= 0, "Given polynomial degree is too high to proceed!" );
     
+    // Local copy of parameter positions
+    std::vector<double> parPositionLocal(parameterPositions);
+
+    // Border pointers for sum-region. The values between this region are summed up and averaged 
+    // with respect to polynomial degree.
+
+    double* frontPtr = &parPositionLocal[1];
+    double* backPtr = &parPositionLocal[polynomialDegree];
+    
+    // Calculates the knot vector by using averaging technique.
+    int i = 0;
+    while(backPtr!=&parPositionLocal[parPositionLocal.size()-1]){
+
+            double sumRegion = 0.0;           
+            
+            for(auto cIterator = frontPtr; cIterator<=backPtr; cIterator++){
+
+                sumRegion += *cIterator;            
+
+            }
+
+            knotVector[polynomialDegree+1+i] = sumRegion/ (double) polynomialDegree;
+            i++;
+            backPtr++;
+            frontPtr++; 
+       
+        }
+    
     // Calculates the knot vector.
-    for(int i = 0; i < mInner; i++){
+  /*  for(int i = 0; i < mInner; i++){
 
         if(polynomialDegree==1){
             knotVector[polynomialDegree + 1 + i] = parameterPositions[polynomialDegree + i];       
@@ -140,6 +163,8 @@ std::vector<double> knotVectorUsingAveraging( const std::vector<double>& paramet
             knotVector[polynomialDegree + 1 + i] = ((parameterPositions[polynomialDegree + i-2])+(parameterPositions[polynomialDegree + i] + parameterPositions[polynomialDegree - 1 + i]))/(double)polynomialDegree;
         }
     }
+    
+    */
 
     // Final configuration of knot vector with respect to open-knot vector approach by filling the last (polynomialDegree + 1) elements with 1.0. 
     for(int i=0; i<(int)polynomialDegree+1; i++){
